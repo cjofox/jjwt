@@ -1,0 +1,38 @@
+name: CBOM (CycloneDX Crypto Inventory)
+
+on:
+  workflow_dispatch:   # Allows you to manually trigger the workflow
+  push:
+    branches: [ master ]  # Only runs automatically on pushes to master
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  cbom:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build with Maven
+        run: mvn -B -q -DskipTests install
+
+      - name: Generate CBOM
+        id: cbom
+        uses: PQCA/cbomkit-action@v2.1.1
+        env:
+          CBOMKIT_LANGUAGES: java
+
+      - name: Upload CBOM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: CBOM
+          path: ${{ steps.cbom.outputs.pattern }}
